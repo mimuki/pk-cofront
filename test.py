@@ -40,6 +40,9 @@ async def main():
                 index = inputMembers.index(inputMember)
                 print("Recognized " + member.name + " at position " + str(index))
                 comboMembers[index] = member
+                # removing by name, because index won't be kept
+                # (i.e. if theres 2 people and you remove the first one,
+                # the second would get mad bc its index doesnt exist now
                 unknownMembers.remove(member.name.lower())
 
     # If after all of that, some input members werent removed
