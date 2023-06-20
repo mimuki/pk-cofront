@@ -9,14 +9,23 @@ async def main():
     print(system.description)
 
     # pray they don't have multi word names ig
-    inputMembers = input("Write the names or IDs of who you'd like to combo: ").split(' ')
+    inputMembers = input("Write the names or IDs of who you'd like to combo: ").lower().split(' ')
     # remove extra strings from stuff like double spaces
     inputMembers = list(filter(None, inputMembers))
     print(inputMembers)
+    # As we loop through and find members we know, we remove them from unknownMembers
+    unknownMembers = inputMembers
 
     # Get all the members in system
     members = pk.get_members()
+    # Make combo members a dummy list
+    # helps with making the order good later
     comboMembers = []
+    i = 0
+    while i < len(inputMembers):
+        comboMembers.append("")
+        i = i + 1
+
     # For each member in the system...
     async for member in members:
         # print(f"{member.name} (`{member.id}`)")
@@ -24,15 +33,20 @@ async def main():
         for inputMember in inputMembers:
             # If it matches
             # this doesn't make sure you didn't enter the same name twice, rip
-            if inputMember.lower() == member.name.lower():
-                print("I know you! Recognized " + member.name)
-                inputMembers.remove(inputMember)
-                comboMembers.append(member)
+            if inputMember == member.name.lower():
+                # What order the member was mentioned in the input
+                # first = 0, second = 1, etc
+                # this breaks a lot and idk why
+                index = inputMembers.index(inputMember)
+                print("Recognized " + member.name + " at position " + str(index))
+                comboMembers[index] = member
+                unknownMembers.remove(member.name.lower())
+
     # If after all of that, some input members werent removed
-    if inputMembers != []:
+    if unknownMembers != []:
         print("There were some members I couldn't match.")
         print("Check that you wrote these names correctly, as in PK:")
-        for member in inputMembers:
+        for member in unknownMembers:
             print("  " + member)
         print("If you are sure that's right, maybe you entered that name twice idk")
         print("do you expect me to catch that kind of error in a project like this")
