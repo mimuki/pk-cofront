@@ -41,7 +41,12 @@ async def main():
     elif len(comboMembers) == 1:
         print("you cant combine one member tf")
     else: # seems legit
-        print("LGTM")
+        names = []
+        print("Looks good! Going to combine these members:")
+        for member in comboMembers:
+            print("  " + str(member.name))
+            names.append(str(member.name))
+        print("・".join(names))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
