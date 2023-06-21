@@ -1,69 +1,71 @@
 from pluralkit import Client
-import asyncio
+
 # keep token not in this file, for obvious reasons
 from config import TOKEN
-pk = Client(TOKEN)
+pk = Client(TOKEN, async_mode=False)
 
-async def main():
-    system = await pk.get_system()
-    print(system.description)
+system = pk.get_system()
+print(f"Hi, {system.name}!")
 
-    # pray they don't have multi word names ig
-    inputMembers = input("Write the names or IDs of who you'd like to combo: ").lower().split(' ')
-    # remove extra strings from stuff like double spaces
-    inputMembers = list(filter(None, inputMembers))
-    print(inputMembers)
-    # As we loop through and find members we know, we remove them from unknownMembers
-    unknownMembers = inputMembers
+# Ask for combo members
+inputMembers = input("Write the names or IDs of who you'd like to combo: ")
+# Lowercase it, so that it's not case sensitive
+inputMembers = inputMembers.lower()
+# Turn it into a list, split by spaces
+# This breaks multi word names, but those suck anyway
+inputMembers = inputMembers.split(' ')
+# remove extra strings from stuff like double spaces
+inputMembers = list(filter(None, inputMembers))
 
-    # Get all the members in system
-    members = pk.get_members()
-    # Make combo members a dummy list
-    # helps with making the order good later
-    comboMembers = []
-    i = 0
-    while i < len(inputMembers):
-        comboMembers.append("")
-        i = i + 1
+comboMembers = [] 
+names = [] # For member making
+nicks = [] # For display name making
+print(f"Thanks.\nI'm going to try and combine these members:")
+for member in inputMembers:
+    print(f"- {member}")
+# Actually get your system list from pk
+members = pk.get_members()
 
-    # For each member in the system...
-    async for member in members:
-        # print(f"{member.name} (`{member.id}`)")
-        # For each member you manually wrote
-        for inputMember in inputMembers:
-            # If it matches
-            # this doesn't make sure you didn't enter the same name twice, rip
-            if inputMember == member.name.lower():
-                # What order the member was mentioned in the input
-                # first = 0, second = 1, etc
-                # this breaks a lot and idk why
-                index = inputMembers.index(inputMember)
-                print("Recognized " + member.name + " at position " + str(index))
-                comboMembers[index] = member
-                # removing by name, because index won't be kept
-                # (i.e. if theres 2 people and you remove the first one,
-                # the second would get mad bc its index doesnt exist now
-                unknownMembers.remove(member.name.lower())
+for inputMember in inputMembers:
+    print(f"Searching for \033[96m{inputMember} \033[0min your system.")
+    print(f"{(inputMembers.index(inputMember))} of {len(inputMembers)} members processed so far.")
+    found = False
+    for member in members:
+        if inputMember == member.name.lower():
+            print(f"\033[32mSuccess!\033[0m Found \033[36m{inputMember}\033[0m in system list.")
+            comboMembers.append(member)
+            found = True
+    if not found:
+        print(f"Couldn't find {inputMember}.")
+        break
 
-    # If after all of that, some input members werent removed
-    if unknownMembers != []:
-        print("There were some members I couldn't match.")
-        print("Check that you wrote these names correctly, as in PK:")
-        for member in unknownMembers:
-            print("  " + member)
-        print("If you are sure that's right, maybe you entered that name twice idk")
-        print("do you expect me to catch that kind of error in a project like this")
-    elif comboMembers == []:
-        print("No members specified")
-    elif len(comboMembers) == 1:
-        print("you cant combine one member tf")
-    else: # seems legit
-        names = []
-        print("Looks good! Going to combine these members:")
-        for member in comboMembers:
-            print("  " + str(member.name))
-            names.append(str(member.name))
-        print("・".join(names))
+print("Input processed! I'm going to combine these members:")
+for member in comboMembers:
+    print(f"- {member.name} (nickname: {member.display_name})")
+    names.append(member.name)
+    if member.display_name:
+        nicks.append(member.display_name)
+    else:
+        nicks.append(member.name)
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+comboName = "+".join(names)
+comboNick = "・".join(nicks)
+print(system.tag)
+if len(comboNick) + len(system.tag) + 1 > 80 or len(comboName) > 80:
+    print("This combination's name or display name is too long for Pluralkit.")
+    print(f"The combo member's name has {len(comboName)} characters, their display name has {len(comboNick)} characters, and your system tag has {(len(system.tag)+1)} characters.")
+    print(f"The max total webhook length is 80 characters, but you have {(len(comboNick) + len(system.tag) +1)}. Your name length is {len(comboName)}.")
+else:
+    print("Their name when sending messages is:")
+    print(comboNick)
+    print("Their name for running commands is:")
+    print(comboName)
+    found = False
+    for member in members:
+        if member.name == comboName:
+            print(f"{member.name} already has a member!")
+            found = True
+    if found == False:
+        print("You don't have a PK member yet")
+    else:
+        print("You already have a member!")
