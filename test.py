@@ -7,9 +7,14 @@ comboMembers = [] # The member objects of each member to combine
 names = [] # The names of each member to combine
 nicks = [] # The display names of each member to combine
 ids = [] # The IDs of each member to combine
-
+imgUrls = [] # The URLs of member avatars
 
 from pluralkit import Client, Privacy, AutoproxyMode
+import os # for getting the right file extension
+import requests # request img from web
+import shutil # save img locally
+from PIL import Image # Image manipulation 
+
 # keep token not in this file, for obvious reasons
 try:
     from config import TOKEN, MODE
@@ -61,6 +66,10 @@ for member in comboMembers:
         nicks.append(member.display_name)
     else:
         nicks.append(member.name)
+    if member.avatar_url: # member has an avatar
+        imgUrls.append(member.avatar_url)
+    elif system.avatar_url: # system avatar as fallback
+        imgUrls.append(system.avatar_url)
 
 comboName = "+".join(names)
 comboNameDesc = "`\n`pk;m ".join(names)
@@ -80,6 +89,7 @@ else: # Should be fine
     print(f"- {CYAN}{comboNick}{RESET}")
     print("Their name for running commands is:")
     print(f"- {CYAN}{comboName}{RESET}")
+
     found = False
     for member in members:
         if member.name == comboName:
@@ -87,8 +97,62 @@ else: # Should be fine
             comboMember = member
             found = True
     if found == False:
-        desc = f'This is the combination of multiple seperate members into a single Pluralkit proxy.\n\nFor more information, see:\n`pk;m {comboNameDesc}`'
         print(f"Combo member {CYAN}{comboName}{RESET} doesn't exist in pluralkit, let me make them for you!")
+        
+        print("\nDownloading avatars for combining")
+        i = 0
+        imagePath = []
+        ext = []
+        fileLocation = []
+        for image in imgUrls:
+            if i == 4: 
+                print("Combined avatars only supports up to 4 images, skipping the rest...")
+                break
+            imagePath.append("")
+            ext.append("")
+            fileLocation.append("")
+            imagePath[i], ext[i] = os.path.splitext(image)
+            fileLocation[i] = f"img/{i}{ext[i]}"
+            res = requests.get(image, stream = True)
+            if res.status_code == 200:
+                with open(fileLocation[i],'wb') as f:
+                    shutil.copyfileobj(res.raw, f)
+                print(f"{GREEN}Image {i} successful.{RESET}")
+            else:
+                print(f"{RED}Image {i} failed to download.{RESET}")
+
+            i = i + 1
+        if i == 2: # Two members, split in half
+            img1 = Image.open(fileLocation[0]).resize((500,500))
+            img2 = Image.open(fileLocation[1]).resize((500,500)).crop((250,0,500,500))
+            img1.paste(img2, (250,0))
+            comboAvatar = f"img/{comboName}{ext[0]}"
+            img1.save(comboAvatar)
+        if i == 3:
+            img1 = Image.open(fileLocation[0]).resize((500, 500))
+            img2 = Image.open(fileLocation[1]).resize((500, 500)).crop((0, 250, 250, 500))
+            img3 = Image.open(fileLocation[2]).resize((500, 500)).crop((250, 250, 500, 500))
+            img1.paste(img2, (0, 250))
+            img1.paste(img3, (250,250))
+            comboAvatar = f"img/{comboName}{ext[0]}"
+            img1.save(comboAvatar)
+            print(f"{GREEN}Avatar created!{RESET}If you want to use this as your avatar, set it manually in pluralkit. Do I look like a file host to you? :P")
+        desc = f'This is the combination of multiple seperate members into a single Pluralkit proxy.\n\nFor more information, see:\n`pk;m {comboNameDesc}`'
+
+        if i == 4:
+            img1 = Image.open(fileLocation[0]).resize((500, 500))
+            img2 = Image.open(fileLocation[1]).resize((250, 250))
+            img3 = Image.open(fileLocation[2]).resize((250, 250))
+            img4 = Image.open(fileLocation[3]).resize((250, 250))
+            img1.paste(img1.resize((250,250)), (0, 0))
+            img1.paste(img2, (250, 0))
+            img1.paste(img3, (0, 250))
+            img1.paste(img4, (250, 250))
+            comboAvatar = f"img/{comboName}{ext[0]}"
+            img1.save(comboAvatar)
+            print(f"{GREEN}Avatar created!{RESET}If you want to use this as your avatar, set it manually in pluralkit. Do I look like a file host to you? :P")
+        desc = f'This is the combination of multiple seperate members into a single Pluralkit proxy.\n\nFor more information, see:\n`pk;m {comboNameDesc}`'
+
         comboMember = pk.new_member(
                 comboName, 
                 display_name=comboNick, 
