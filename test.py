@@ -13,7 +13,7 @@ from pluralkit import Client, Privacy, AutoproxyMode
 import os # for getting the right file extension
 import requests # request img from web
 import shutil # save img locally
-from PIL import Image # Image manipulation 
+from PIL import Image, ImageDraw # Image manipulation 
 
 # keep token not in this file, for obvious reasons
 try:
@@ -75,13 +75,19 @@ comboName = "+".join(names)
 comboNameDesc = "`\n`pk;m ".join(names)
 comboNick = "・".join(nicks)
 
+# Fix it getting angry when theres no tag
+if system.tag == None:
+    sysTag = ""
+else:
+    sysTag = system.tag
+
 # If it would break PK (doesn't check server tag)
-if len(comboNick) + len(system.tag) + 1 > 80 or len(comboName) > 80:
+if len(comboNick) + len(sysTag) > 80 or len(comboName) > 80:
     print("{RED}This combination's name or display name is too long for Pluralkit.{RESET}")
     print(f"Member name length: {len(comboName)} characters")
     print(f"Display name length: {len(comboNick)} characters")
-    print(f"System tag length: {(len(system.tag) +1)}")
-    print(f"Combined webhook name length: {(len(comboNick) + 1 + len(system.tag))}")
+    print(f"System tag length: {len(sysTag)}")
+    print(f"Combined webhook name length: {(len(comboNick) + len(sysTag))}")
     print("\nOne of these is above the limit of 80 characters.")
     exit()
 else: # Should be fine
@@ -113,8 +119,8 @@ else: # Should be fine
         ext = []
         fileLocation = []
         for image in imgUrls:
-            if i == 4: 
-                print("Combined avatars only supports up to 4 images, skipping the rest...")
+            if i == 7: 
+                print("Combined avatars only supports up to 6 images, skipping the rest...")
                 break
             imagePath.append("")
             ext.append("")
@@ -137,27 +143,173 @@ else: # Should be fine
             comboAvatar = f"img/{comboName}{ext[0]}"
             img1.save(comboAvatar)
         if i == 3:
+            # Create mask for the first segment
+            mask1 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask1)
+            draw.pieslice([-200,-200,700,700], -90, 45, fill=255)
+            mask1.save("img/mask1.png")
+            
+            # create mask for the second segment
+            mask2 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask2)
+            draw.pieslice([-200,-200,700,700], 45, 135, fill=255)
+            mask2.save("img/mask2.png")
+
+            # Open all 3 parts
             img1 = Image.open(fileLocation[0]).resize((500, 500))
-            img2 = Image.open(fileLocation[1]).resize((500, 500)).crop((0, 250, 250, 500))
-            img3 = Image.open(fileLocation[2]).resize((500, 500)).crop((250, 250, 500, 500))
-            img1.paste(img2, (0, 250))
-            img1.paste(img3, (250,250))
+            img2 = Image.open(fileLocation[1]).resize((500, 500))
+            img3 = Image.open(fileLocation[2]).resize((500, 500))
+
+            # Add images to the first one
+            img1.paste(img2, box=None, mask=mask1)
+            img1.paste(img3, box=None, mask=mask2)
+
+            # Save it with a distinct name
             comboAvatar = f"img/{comboName}{ext[0]}"
             img1.save(comboAvatar)
+
             print(f"{GREEN}Avatar created!{RESET}If you want to use this as your avatar, set it manually in pluralkit. Do I look like a file host to you? :P")
         desc = f'This is the combination of multiple seperate members into a single Pluralkit proxy.\n\nFor more information, see:\n`pk;m {comboNameDesc}`'
 
         if i == 4:
+            # Create mask for the first segment
+            mask1 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask1)
+            draw.pieslice([-200,-200,700,700], 90, 180, fill=255)
+            mask1.save("img/mask1.png")
+            
+            # create mask for the second segment
+            mask2 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask2)
+            draw.pieslice([-200,-200,700,700], 0, 90, fill=255)
+            mask2.save("img/mask2.png")
+
+
+            # create mask for the third segment
+            mask3 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask3)
+            draw.pieslice([-200,-200,700,700], -90, 0, fill=255)
+            mask3.save("img/mask3.png")
+
+            # Open all 4 parts
             img1 = Image.open(fileLocation[0]).resize((500, 500))
-            img2 = Image.open(fileLocation[1]).resize((250, 250))
-            img3 = Image.open(fileLocation[2]).resize((250, 250))
-            img4 = Image.open(fileLocation[3]).resize((250, 250))
-            img1.paste(img1.resize((250,250)), (0, 0))
-            img1.paste(img2, (250, 0))
-            img1.paste(img3, (0, 250))
-            img1.paste(img4, (250, 250))
+            img2 = Image.open(fileLocation[1]).resize((500, 500))
+            img3 = Image.open(fileLocation[2]).resize((500, 500))
+            img4 = Image.open(fileLocation[3]).resize((500, 500))
+
+            # Add images to the first one
+            img1.paste(img2, box=None, mask=mask1)
+            img1.paste(img3, box=None, mask=mask2)
+            img1.paste(img4, box=None, mask=mask3)
+
+            # Save it with a distinct name
             comboAvatar = f"img/{comboName}{ext[0]}"
             img1.save(comboAvatar)
+
+            print(f"{GREEN}Avatar created!{RESET}If you want to use this as your avatar, set it manually in pluralkit. Do I look like a file host to you? :P")
+        desc = f'This is the combination of multiple seperate members into a single Pluralkit proxy.\n\nFor more information, see:\n`pk;m {comboNameDesc}`'
+
+        if i == 5:
+            # Create mask for the first segment
+            mask1 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask1)
+            draw.pieslice([-200,-200,700,700], 90, 162, fill=255)
+            mask1.save("img/mask1.png")
+            
+            # create mask for the second segment
+            mask2 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask2)
+            draw.pieslice([-200,-200,700,700], 18, 90, fill=255)
+            mask2.save("img/mask2.png")
+
+
+            # create mask for the third segment
+            mask3 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask3)
+            draw.pieslice([-200,-200,700,700], -54, 18, fill=255)
+            mask3.save("img/mask3.png")
+
+
+            # create mask for the fourth segment
+            mask4 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask4)
+            draw.pieslice([-200,-200,700,700], 234, 306, fill=255)
+            mask4.save("img/mask4.png")
+
+            # Open all 4 parts
+            img1 = Image.open(fileLocation[0]).resize((500, 500))
+            img2 = Image.open(fileLocation[1]).resize((500, 500))
+            img3 = Image.open(fileLocation[2]).resize((500, 500))
+            img4 = Image.open(fileLocation[3]).resize((500, 500))
+            img5 = Image.open(fileLocation[4]).resize((500, 500))
+
+            # Add images to the first one
+            img1.paste(img2, box=None, mask=mask1)
+            img1.paste(img3, box=None, mask=mask2)
+            img1.paste(img4, box=None, mask=mask3)
+            img1.paste(img5, box=None, mask=mask4)
+
+            # Save it with a distinct name
+            comboAvatar = f"img/{comboName}{ext[0]}"
+            img1.save(comboAvatar)
+
+            print(f"{GREEN}Avatar created!{RESET}If you want to use this as your avatar, set it manually in pluralkit. Do I look like a file host to you? :P")
+        desc = f'This is the combination of multiple seperate members into a single Pluralkit proxy.\n\nFor more information, see:\n`pk;m {comboNameDesc}`'
+
+        if i == 6:
+            # Create mask for the first segment
+            mask1 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask1)
+            draw.pieslice([-200,-200,700,700], 150, 210, fill=255)
+            mask1.save("img/mask1.png")
+            
+            # create mask for the second segment
+            mask2 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask2)
+            draw.pieslice([-200,-200,700,700], 90, 150, fill=255)
+            mask2.save("img/mask2.png")
+
+
+            # create mask for the third segment
+            mask3 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask3)
+            draw.pieslice([-200,-200,700,700], 30, 90, fill=255)
+            mask3.save("img/mask3.png")
+
+
+            # create mask for the fourth segment
+            mask4 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask4)
+            draw.pieslice([-200,-200,700,700], -30, 30, fill=255)
+            mask4.save("img/mask4.png")
+
+
+            # create mask for the fourth segment
+            mask5 = Image.new('L', [500,500], 0)
+            draw = ImageDraw.Draw(mask5)
+            draw.pieslice([-200,-200,700,700], 270, 330, fill=255)
+            mask5.save("img/mask5.png")
+
+            # Open all 4 parts
+            img1 = Image.open(fileLocation[0]).resize((500, 500))
+            img2 = Image.open(fileLocation[1]).resize((500, 500))
+            img3 = Image.open(fileLocation[2]).resize((500, 500))
+            img4 = Image.open(fileLocation[3]).resize((500, 500))
+            img5 = Image.open(fileLocation[4]).resize((500, 500))
+            img6 = Image.open(fileLocation[5]).resize((500, 500))
+
+            # Add images to the first one
+            img1.paste(img2, box=None, mask=mask1)
+            img1.paste(img3, box=None, mask=mask2)
+            img1.paste(img4, box=None, mask=mask3)
+            img1.paste(img5, box=None, mask=mask4)
+            img1.paste(img6, box=None, mask=mask5)
+
+            # Save it with a distinct name
+            comboAvatar = f"img/{comboName}{ext[0]}"
+            img1.save(comboAvatar)
+
+
             print(f"{GREEN}Avatar created!{RESET}If you want to use this as your avatar, set it manually in pluralkit. Do I look like a file host to you? :P")
         desc = f'This is the combination of multiple seperate members into a single Pluralkit proxy.\n\nFor more information, see:\n`pk;m {comboNameDesc}`'
 
