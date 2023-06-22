@@ -97,6 +97,14 @@ else: # Should be fine
             comboMember = member
             found = True
     if found == False:
+        for group in pk.get_groups():
+            if group.name == "Cofront":
+                comboGroup = group
+                found = True
+        if found == False:
+            print("You don't have a group for cofront members, let me make one!")
+            comboGroup = pk.new_group("Cofront", description="Members that are combinations of other members")
+        
         print(f"Combo member {CYAN}{comboName}{RESET} doesn't exist in pluralkit, let me make them for you!")
         
         print("\nDownloading avatars for combining")
@@ -159,7 +167,11 @@ else: # Should be fine
                 description=desc, 
                 visibility=Privacy.PRIVATE,
                 )
+        # Also add them to the cofront group
+        pk.add_group_members(comboGroup, [comboMember])
         print(f"Created {CYAN}{comboName}{RESET} successfully!")
+
+
     if MODE == 'autoproxy':
         print(f"Autoproxy mode selected. This works like running pk;ap {comboName} does in Discord.")
         print(f"Because I'm not discord, I need you to tell me what server you want to autoproxy in. (If you don't want to run this for every server you're in, consider trying {CYAN}MODE = 'switch'{RESET} in config.py.)")
