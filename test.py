@@ -8,7 +8,8 @@ names = [] # The names of each member to combine
 nicks = [] # The display names of each member to combine
 ids = [] # The IDs of each member to combine
 imgUrls = [] # The URLs of member avatars
-
+skipped = False # If the user skipped deleting some members.
+found = False
 from pluralkit import Client, Privacy, AutoproxyMode
 import os # for getting the right file extension
 import requests # request img from web
@@ -21,7 +22,7 @@ try:
 except ModuleNotFoundError:
     print(f"{RED}Could not find config.py.{RESET}")
     config = open("config.py", "w")
-    config.write("TOKEN = '' # get yours by running `pk;token` in Discord\nMODE = 'autoproxy' # options: 'autoproxy', 'switch' ")
+    config.write("TOKEN = '' # get yours by running `pk;token` in Discord\nMODE = 'autoproxy' # options: 'autoproxy', 'switch', 'cleanup'")
     config.close()
     print("You need to manually edit that file, and put your token in it.")
     exit()
@@ -33,7 +34,40 @@ if system.name == None:
 else:
     print(f"Hi, {CYAN}{system.name}{RESET}!")
 print("This is a tool that combines members into a single member,")
-print("so you can proxy as all of them.\n")
+print(f"so you can proxy as all of them.\nIf you want to delete combo members conviniently, set {CYAN}MODE = 'cleanup'{RESET} in {CYAN}config.py{RESET}.\n")
+if MODE == 'cleanup':
+    print(f"Entering cleanup mode. If you don't want this, edit {CYAN}config.py{RESET} and choose 'autoproxy' or 'front' mode.\n")
+    print(f"{RED}This will permanently delete every member in the Cofront group, and the group itself.{RESET}")
+    confirm = input(f"({CYAN}y{RESET} to confirm, anything else to cancel)\nAre you sure? ")
+    if confirm == 'y' or confirm == 'Y' or confirm == "'y'":
+        for group in pk.get_groups():
+            if group.name == "Cofront":
+                found = True
+                print("Found the Cofront group. Getting members...")
+                for member in pk.get_group_members(group):
+                    print(f"Found {CYAN}{member.name}{RESET}.")
+                    print(f"({CYAN}y{RESET} to confirm, anything else to skip)")
+                    confirm = input(f"{RED}Do you want to delete them?{RESET} ")
+                    if confirm == 'y' or confirm == 'Y' or confirm == "'y'":
+                        pk.delete_member(member)
+                        print(f"{GREEN}Member deleted.{RESET}")
+                    else:
+                        print(f"Skipping {CYAN}{member.name}{RESET}")
+                        skipped = True
+                if skipped == True:
+                    print("Incomplete delete detected. I won't delete the group unless you delete every member.")
+                else:
+                    print(f"({CYAN}y{RESET} to confirm, anything else to skip)")
+                    confirm = input(f"Do you want to delete the {group.name} group as well? If you run this again in regular mode, I will generate a new one. ")
+                    if confirm == 'y' or confirm == 'Y' or confirm == "'y'":
+                        pk.delete_group(group)
+        if found == False:
+            print("I couldn't find the Cofront group. If you've changed the name manually, change it back, because I am a lazily coded program.")
+        print("Thanks for using pk-cofront. Remember to change {CYAN}config.py{RESET} to exit cleanup mode.")
+        exit()
+    else:
+        print("Fair enough.")
+        exit()
 # Ask for combo members
 inputMembers = input("Enter names of members to combine: ").lower().split(' ')
 # remove extra strings from stuff like double spaces
@@ -146,7 +180,6 @@ else: # Should be fine
             repeats = 1 # how many time's weve done this
 
         while repeats <= i:
-            print(f"repeats: {repeats}\nangleSize: {angleSize}\nstartAngle: {startAngle}")
             mask.append("")
             img.append("")
             # Create mask for the first segment
